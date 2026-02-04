@@ -1,0 +1,2894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>The Analyst - Smart Business Intelligence</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2c3e50;
+            --primary-light: #34495e;
+            --accent: #3498db;
+            --accent-hover: #2980b9;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #16a085;
+            --bg-main: #ecf0f1;
+            --bg-card: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border: #bdc3c7;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+            --gradient-primary: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            --gradient-accent: linear-gradient(135deg, #3498db 0%, #16a085 100%);
+        }
+
+        [data-theme="dark"] {
+            --primary: #ffffff;
+            --primary-light: #e0e0e0;
+            --accent: #3498db;
+            --accent-hover: #5dade2;
+            --success: #2ecc71;
+            --danger: #ec7063;
+            --warning: #f4d03f;
+            --info: #1abc9c;
+            --bg-main: #000000;
+            --bg-card: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border: #333333;
+            --shadow-sm: 0 2px 8px rgba(255,255,255,0.1);
+            --shadow-md: 0 4px 16px rgba(255,255,255,0.15);
+            --shadow-lg: 0 8px 24px rgba(255,255,255,0.2);
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        .header {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            padding: 24px;
+            margin-bottom: 20px;
+            animation: slideDown 0.5s ease;
+            overflow: hidden;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .branding h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2em;
+            color: var(--primary);
+            margin-bottom: 4px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .branding .tagline {
+            color: var(--text-secondary);
+            font-size: 0.85em;
+            font-style: italic;
+            margin-bottom: 12px;
+        }
+
+        .company-info {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .company-info strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .current-date {
+            background: var(--gradient-accent);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85em;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .current-date .day {
+            font-size: 0.8em;
+            opacity: 0.95;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: relative;
+            width: 56px;
+            height: 30px;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .theme-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-primary);
+            transition: 0.3s;
+            border-radius: 30px;
+        }
+
+        .theme-slider:before {
+            position: absolute;
+            content: "☀️";
+            height: 24px;
+            width: 24px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        input:checked + .theme-slider:before {
+            transform: translateX(26px);
+            content: "🌙";
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.6s ease 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--accent);
+            position: relative;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(52, 152, 219, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card h3 {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .stat-card .icon {
+            position: absolute;
+            right: 16px;
+            top: 16px;
+            font-size: 2em;
+            opacity: 0.15;
+        }
+
+        /* Main Content Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.6s ease 0.3s both;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            padding: 24px;
+            transition: box-shadow 0.3s ease;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .card-header h2 {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Form Styles */
+        .form-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.85em;
+        }
+
+        .form-group label .optional {
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-size: 0.9em;
+        }
+
+        .form-group label .existing-badge {
+            background: var(--info);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            margin-left: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--text-secondary);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-outline:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-icon {
+            padding: 10px;
+            min-width: 40px;
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .form-actions .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* Status Multi-select */
+        .status-multiselect {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-main);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .status-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-option:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .status-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .status-option label {
+            cursor: pointer;
+            margin: 0;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9em;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            padding: 20px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.6s ease 0.4s both;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .filter-group {
+            position: relative;
+            min-width: 0;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-input-wrapper input {
+            width: 100%;
+            padding: 10px 36px 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .filter-input-wrapper input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .clear-icon {
+            position: absolute;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7em;
+            transition: all 0.2s ease;
+            z-index: 2;
+        }
+
+        .clear-icon:hover {
+            transform: scale(1.1);
+            background: #c0392b;
+        }
+
+        .filter-input-wrapper.has-value .clear-icon {
+            display: flex;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .filter-actions .btn {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        .tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tabs::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            background: transparent;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .tab-btn.active {
+            background: var(--gradient-accent);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Bulk Actions */
+        .bulk-actions {
+            background: var(--bg-card);
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--accent);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .bulk-actions.active {
+            display: flex;
+        }
+
+        .bulk-actions-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bulk-actions-right {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Customer Summary Section */
+        .customer-summary {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            padding: 24px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .customer-card {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, rgba(22, 160, 133, 0.05) 100%);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .customer-card:hover {
+            border-color: var(--accent);
+            transform: translateX(4px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .customer-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .customer-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+        }
+
+        .customer-mobile {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .entry-count-badge {
+            background: var(--accent);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .customer-entries {
+            display: none;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .customer-entries.expanded {
+            display: block;
+        }
+
+        .show-more-btn {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            color: var(--accent);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 16px;
+            font-family: inherit;
+            font-size: 0.9em;
+        }
+
+        .show-more-btn:hover {
+            background: rgba(52, 152, 219, 0.05);
+            border-color: var(--accent);
+        }
+
+        /* Entries List */
+        .entries-container {
+            animation: fadeIn 0.6s ease 0.5s both;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .no-entries {
+            text-align: center;
+            padding: 48px 16px;
+            color: var(--text-secondary);
+        }
+
+        .no-entries-icon {
+            font-size: 3.5em;
+            margin-bottom: 12px;
+            opacity: 0.3;
+        }
+
+        .no-entries h3 {
+            font-size: 1.3em;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .no-entries p {
+            font-size: 0.95em;
+        }
+
+        .entry-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--accent);
+            position: relative;
+            animation: slideIn 0.4s ease;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .entry-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateX(4px);
+        }
+
+        .entry-card.bookmarked {
+            border-left-color: var(--warning);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(243, 156, 18, 0.03) 100%);
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .entry-main-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .entry-customer {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .entry-mobile {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            word-break: break-all;
+        }
+
+        .entry-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .entry-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .entry-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 12px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+
+        .entry-detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .entry-detail-label {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .entry-detail-value {
+            font-size: 0.9em;
+            color: var(--text-primary);
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .status-badge.sold {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--success);
+        }
+
+        .status-badge.inquiry {
+            background: rgba(52, 152, 219, 0.1);
+            color: var(--accent);
+        }
+
+        .status-badge.pending {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--warning);
+        }
+
+        .status-badge.cancelled {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--danger);
+        }
+
+        .status-badge.future-follow-up {
+            background: rgba(155, 89, 182, 0.1);
+            color: #9b59b6;
+        }
+
+        .entry-notes {
+            margin-top: 12px;
+        }
+
+        .entry-notes-title {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .entry-notes-content {
+            color: var(--text-primary);
+            font-size: 0.85em;
+            line-height: 1.6;
+            background: rgba(52, 152, 219, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            word-wrap: break-word;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .quick-action-btn {
+            padding: 10px;
+            background: transparent;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-family: inherit;
+        }
+
+        .quick-action-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        /* Success Message */
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            background: var(--success);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideInDown 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success-message.show {
+            display: flex;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 28px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: modalPop 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.3em;
+            color: var(--primary);
+            flex: 1;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-body p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        /* Import Modal */
+        .import-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 28px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 14px;
+        }
+
+        .import-area:hover {
+            border-color: var(--accent);
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .import-area.dragover {
+            border-color: var(--accent);
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .import-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .import-text {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            html {
+                overflow-x: hidden;
+                max-width: 100vw;
+            }
+
+            * {
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            body {
+                overflow-x: hidden !important;
+                width: 100vw !important;
+                max-width: 100vw !important;
+            }
+
+            .container {
+                padding: 12px;
+                max-width: 100vw;
+                width: 100%;
+                overflow-x: hidden;
+            }
+
+            .header {
+                padding: 16px;
+                max-width: 100%;
+            }
+
+            .branding h1 {
+                font-size: 1.6em;
+            }
+
+            .branding .tagline {
+                font-size: 0.8em;
+            }
+
+            .company-info {
+                font-size: 0.8em;
+            }
+
+            .header-top {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .header-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .current-date {
+                flex: 1;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 14px;
+                min-width: 0;
+            }
+
+            .stat-card h3 {
+                font-size: 0.7em;
+            }
+
+            .stat-card .value {
+                font-size: 1.4em;
+                word-wrap: break-word;
+            }
+
+            .stat-card .icon {
+                font-size: 1.6em;
+                right: 10px;
+                top: 10px;
+            }
+
+            .card {
+                padding: 12px !important;
+                width: 100%;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
+                box-sizing: border-box;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                width: 100%;
+            }
+
+            .card-header h2 {
+                font-size: 1.1em;
+                width: 100%;
+            }
+
+            .card-header .btn {
+                width: 100% !important;
+                font-size: 13px !important;
+                padding: 10px 14px !important;
+                white-space: normal !important;
+                line-height: 1.3 !important;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px;
+                width: 100%;
+            }
+
+            .form-group {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .form-group label {
+                width: 100%;
+            }
+
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                font-size: 16px !important;
+            }
+
+            .status-multiselect {
+                grid-template-columns: 1fr !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .status-option {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 10px 8px;
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            .status-option label {
+                font-size: 14px !important;
+                color: var(--text-primary) !important;
+                flex: 1;
+            }
+
+            .filter-section {
+                padding: 12px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                overflow-x: hidden !important;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr !important;
+                width: 100%;
+                gap: 10px;
+            }
+
+            .filter-group {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .filter-input-wrapper {
+                width: 100% !important;
+            }
+
+            .filter-input-wrapper input {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                font-size: 16px !important;
+            }
+
+            .filter-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .filter-actions .btn {
+                width: 100% !important;
+                font-size: 14px;
+                padding: 10px 16px;
+            }
+
+            .tabs {
+                gap: 6px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tab-btn {
+                font-size: 11px !important;
+                padding: 8px 10px !important;
+                white-space: nowrap;
+                flex-shrink: 0;
+                min-width: fit-content;
+            }
+
+            .filter-actions {
+                flex-direction: column;
+            }
+
+            .filter-actions .btn {
+                width: 100%;
+            }
+
+            .tabs {
+                gap: 6px;
+            }
+
+            .tab-btn {
+                font-size: 0.8em;
+                padding: 8px 12px;
+            }
+
+            .bulk-actions {
+                padding: 12px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .bulk-actions-left,
+            .bulk-actions-right {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .bulk-actions-right .btn {
+                flex: 1;
+                font-size: 14px;
+            }
+
+            .customer-summary {
+                padding: 12px;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow-x: hidden;
+            }
+
+            .customer-card {
+                padding: 12px;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            .entry-card {
+                padding: 12px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+                overflow-x: hidden !important;
+            }
+
+            .entry-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .entry-actions {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .entry-actions .btn {
+                font-size: 12px !important;
+                padding: 8px 12px !important;
+                min-width: fit-content !important;
+            }
+
+            .btn-icon {
+                min-width: 36px !important;
+                min-height: 36px !important;
+                padding: 8px !important;
+                font-size: 16px !important;
+            }
+
+            .entry-customer {
+                font-size: 1em;
+                word-wrap: break-word;
+                width: 100%;
+            }
+
+            .entry-mobile {
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                width: 100%;
+            }
+
+            .entry-details {
+                grid-template-columns: 1fr !important;
+                gap: 10px;
+                width: 100%;
+            }
+
+            .entry-detail-item {
+                background: rgba(52, 152, 219, 0.05);
+                padding: 8px 10px;
+                border-radius: 6px;
+                width: 100%;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+
+            .entry-detail-label {
+                font-size: 11px !important;
+            }
+
+            .entry-detail-value {
+                font-size: 13px !important;
+                word-wrap: break-word;
+            }
+
+            .entries-container {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+
+            .status-badge {
+                font-size: 10px !important;
+                padding: 4px 8px !important;
+                white-space: nowrap;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .quick-action-btn {
+                padding: 10px;
+                font-size: 13px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .form-actions .btn {
+                width: 100% !important;
+                font-size: 14px;
+            }
+
+            .modal-content {
+                padding: 20px 16px;
+                margin: 10px;
+                max-width: calc(100vw - 20px);
+            }
+
+            .modal-actions {
+                flex-direction: column-reverse;
+                gap: 10px;
+            }
+
+            .modal-actions .btn {
+                width: 100%;
+            }
+
+            .show-more-btn {
+                font-size: 14px !important;
+                padding: 12px !important;
+            }
+
+            /* Force all text to be visible */
+            * {
+                color: var(--text-primary) !important;
+            }
+
+            input::placeholder,
+            textarea::placeholder {
+                color: var(--text-secondary) !important;
+                opacity: 0.7 !important;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-action-btn {
+                padding: 12px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+            }
+
+            .modal-content {
+                padding: 20px 16px;
+                margin: 0;
+            }
+
+            .modal-actions {
+                flex-direction: column-reverse;
+            }
+
+            .modal-actions .btn {
+                width: 100%;
+            }
+
+            .btn-icon {
+                min-width: 36px;
+                min-height: 36px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .branding h1 {
+                font-size: 1.4em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card .value {
+                font-size: 1.6em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <div class="branding">
+                    <h1>The Analyst</h1>
+                    <p class="tagline">"Transforming data into actionable insights"</p>
+                    <div class="company-info">
+                        <div><strong>Company:</strong> Broken Bone Pvt Ltd</div>
+                        <div><strong>Managed by:</strong> Abhishek Sarda</div>
+                    </div>
+                </div>
+                <div class="header-controls">
+                    <div class="current-date">
+                        <div class="day" id="currentDay"></div>
+                        <div id="currentDate"></div>
+                    </div>
+                    <label class="theme-toggle">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="theme-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Entries</h3>
+                <div class="value" id="totalEntries">0</div>
+                <div class="icon">📊</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Sales</h3>
+                <div class="value" id="totalSales">0</div>
+                <div class="icon">✅</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Revenue</h3>
+                <div class="value" id="totalRevenue">₹0</div>
+                <div class="icon">💰</div>
+            </div>
+        </div>
+
+        <!-- Customer Summary Section -->
+        <div class="customer-summary">
+            <div class="card-header">
+                <h2>👥 Customer Summary</h2>
+                <button class="btn btn-outline" onclick="exportCustomerSummary()" style="font-size: 0.9em;">📥 Export Customer Summary</button>
+            </div>
+            <div id="customerSummaryContainer">
+                <div class="no-entries">
+                    <p>No customers yet</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Entry Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 id="formTitle">➕ New Entry</h2>
+                </div>
+                <form id="entryForm" class="form-grid">
+                    <input type="hidden" id="editEntryId">
+                    
+                    <div class="form-group">
+                        <label id="mobileLabel">Mobile Number</label>
+                        <input type="tel" id="mobile" required placeholder="Enter mobile number">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="nameLabel">Customer Name</label>
+                        <input type="text" id="customerName" required placeholder="Enter customer name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Product/Service</label>
+                        <input type="text" id="product" required placeholder="Enter product or service">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Status (Select one or more)</label>
+                        <div class="status-multiselect" id="statusMultiselect">
+                            <div class="status-option">
+                                <input type="checkbox" id="statusInquiry" value="Inquiry">
+                                <label for="statusInquiry">Inquiry</label>
+                            </div>
+                            <div class="status-option">
+                                <input type="checkbox" id="statusPending" value="Pending">
+                                <label for="statusPending">Pending</label>
+                            </div>
+                            <div class="status-option">
+                                <input type="checkbox" id="statusSold" value="Sold">
+                                <label for="statusSold">Sold</label>
+                            </div>
+                            <div class="status-option">
+                                <input type="checkbox" id="statusCancelled" value="Cancelled">
+                                <label for="statusCancelled">Cancelled</label>
+                            </div>
+                            <div class="status-option">
+                                <input type="checkbox" id="statusFutureFollowUp" value="Future Follow-Up">
+                                <label for="statusFutureFollowUp">Future Follow-Up</label>
+                            </div>
+                        </div>
+                        <input type="hidden" id="status" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Amount <span class="optional">(Optional)</span></label>
+                        <input type="number" id="amount" placeholder="Enter amount">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date & Time</label>
+                        <input type="datetime-local" id="dateTime" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Address <span class="optional">(Optional)</span></label>
+                        <textarea id="address" placeholder="Enter address"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Reason/Outcome <span class="optional">(Optional)</span></label>
+                        <textarea id="reason" placeholder="Enter reason or outcome"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes <span class="optional">(Optional)</span></label>
+                        <textarea id="notes" placeholder="Enter additional notes"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">💾 Save Entry</button>
+                        <button type="button" class="btn btn-secondary" id="cancelEditBtn" style="display: none;" onclick="cancelEdit()">❌ Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Entries List -->
+            <div>
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <div class="filter-grid">
+                        <div class="filter-group">
+                            <label>Search</label>
+                            <div class="filter-input-wrapper" id="searchWrapper">
+                                <input type="text" id="searchInput" placeholder="Search...">
+                                <button class="clear-icon" onclick="clearSearch()">✕</button>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label>From Date</label>
+                            <div class="filter-input-wrapper" id="startDateWrapper">
+                                <input type="date" id="filterStartDate">
+                                <button class="clear-icon" onclick="clearStartDate()">✕</button>
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label>To Date</label>
+                            <div class="filter-input-wrapper" id="endDateWrapper">
+                                <input type="date" id="filterEndDate">
+                                <button class="clear-icon" onclick="clearEndDate()">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn btn-primary" onclick="showImportModal()">📥 Import Excel</button>
+                        <button class="btn btn-outline" onclick="exportToExcel()">📤 Export</button>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="filterByStatus('All')">All (<span id="countAll">0</span>)</button>
+                    <button class="tab-btn" onclick="filterByStatus('Inquiry')">Inquiry (<span id="countInquiry">0</span>)</button>
+                    <button class="tab-btn" onclick="filterByStatus('Pending')">Pending (<span id="countPending">0</span>)</button>
+                    <button class="tab-btn" onclick="filterByStatus('Sold')">Sold (<span id="countSold">0</span>)</button>
+                    <button class="tab-btn" onclick="filterByStatus('Cancelled')">Cancelled (<span id="countCancelled">0</span>)</button>
+                    <button class="tab-btn" onclick="filterByStatus('Future Follow-Up')">Future Follow-Up (<span id="countFutureFollowUp">0</span>)</button>
+                    <button class="tab-btn" onclick="filterByStatus('Bookmarked')">⭐ Bookmarked (<span id="countBookmarked">0</span>)</button>
+                </div>
+
+                <!-- Bulk Actions -->
+                <div class="bulk-actions" id="bulkActions">
+                    <div class="bulk-actions-left">
+                        <span id="selectedCount">0 selected</span>
+                        <button class="btn btn-icon btn-outline" onclick="selectAll()" title="Select All">☑️</button>
+                        <button class="btn btn-icon btn-outline" onclick="deselectAll()" title="Deselect All">☐</button>
+                    </div>
+                    <div class="bulk-actions-right">
+                        <button class="btn btn-danger" onclick="bulkDelete()">🗑️ Delete</button>
+                    </div>
+                </div>
+
+                <!-- Entries Container -->
+                <div class="entries-container" id="entriesContainer">
+                    <div class="no-entries">
+                        <div class="no-entries-icon">📋</div>
+                        <h3>No Entries Yet</h3>
+                        <p>Create your first entry to get started</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+        <span>✓</span>
+        <span id="successText">Success!</span>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚠️ Confirm Delete</h3>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this entry? This action cannot be undone.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Delete Modal -->
+    <div class="modal" id="bulkDeleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚠️ Confirm Bulk Delete</h3>
+            </div>
+            <div class="modal-body">
+                <p id="bulkDeleteText">Are you sure you want to delete the selected entries?</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeBulkDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmBulkDelete()">Delete All</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📥 Import from Excel</h3>
+            </div>
+            <div class="modal-body">
+                <button class="btn btn-success" onclick="downloadTemplate()" style="width: 100%; margin-bottom: 16px;">
+                    📄 Download Excel Template
+                </button>
+                <div class="import-area" id="importArea" onclick="document.getElementById('fileInput').click()">
+                    <div class="import-icon">📄</div>
+                    <div class="import-text">Click to select or drag & drop Excel file</div>
+                    <div style="font-size: 0.8em; color: var(--text-secondary);">Supported: .xlsx, .xls</div>
+                </div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFileSelect(event)">
+                <div style="font-size: 0.85em; color: var(--text-secondary); margin-top: 10px; line-height: 1.6;">
+                    <strong>Tip:</strong> Download the template, fill in your data, and upload it here for quick import!
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeImportModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'All';
+        let deleteEntryId = null;
+        let selectedEntries = new Set();
+        let showingAllEntries = false;
+        const INITIAL_ENTRY_LIMIT = 10;
+        let showingAllCustomers = false;
+        const INITIAL_CUSTOMER_LIMIT = 5;
+
+        // Theme Toggle
+        function setupThemeToggle() {
+            const themeToggle = document.getElementById('themeToggle');
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.checked = true;
+            }
+
+            themeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        }
+
+        // Date Display
+        function updateCurrentDate() {
+            const now = new Date();
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            document.getElementById('currentDay').textContent = days[now.getDay()];
+            document.getElementById('currentDate').textContent = 
+                `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+        }
+
+        function setDefaultDateTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('dateTime').value = now.toISOString().slice(0, 16);
+        }
+
+        // Data Management
+        function loadData() {
+            const data = localStorage.getItem('analyticsData');
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveData(data) {
+            localStorage.setItem('analyticsData', JSON.stringify(data));
+        }
+
+        // Check if mobile number exists
+        function checkExistingMobile(mobile) {
+            const data = loadData();
+            return data.find(entry => entry.mobile === mobile);
+        }
+
+        // Mobile number input handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileInput = document.getElementById('mobile');
+            const nameInput = document.getElementById('customerName');
+            const mobileLabel = document.getElementById('mobileLabel');
+            const nameLabel = document.getElementById('nameLabel');
+
+            mobileInput.addEventListener('blur', function() {
+                const mobile = this.value.trim();
+                if (mobile) {
+                    const existing = checkExistingMobile(mobile);
+                    if (existing && !document.getElementById('editEntryId').value) {
+                        nameInput.value = existing.customerName;
+                        nameLabel.innerHTML = 'Customer Name <span class="existing-badge">⚡ Existing Customer</span>';
+                    } else {
+                        nameLabel.innerHTML = 'Customer Name';
+                    }
+                }
+            });
+
+            mobileInput.addEventListener('input', function() {
+                if (!this.value) {
+                    nameLabel.innerHTML = 'Customer Name';
+                }
+            });
+
+            // Status multi-select handler
+            const statusCheckboxes = document.querySelectorAll('.status-option input[type="checkbox"]');
+            const statusHidden = document.getElementById('status');
+            
+            statusCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const selected = Array.from(statusCheckboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value);
+                    
+                    statusHidden.value = selected.join(', ');
+                    
+                    // Visual feedback
+                    statusCheckboxes.forEach(cb => {
+                        if (cb.checked) {
+                            cb.parentElement.style.background = 'rgba(52, 152, 219, 0.2)';
+                            cb.parentElement.style.borderLeft = '3px solid var(--accent)';
+                        } else {
+                            cb.parentElement.style.background = 'var(--bg-card)';
+                            cb.parentElement.style.borderLeft = 'none';
+                        }
+                    });
+                });
+            });
+        });
+
+        // Filter Input Clear Icons
+        function updateClearIcons() {
+            const searchInput = document.getElementById('searchInput');
+            const startDate = document.getElementById('filterStartDate');
+            const endDate = document.getElementById('filterEndDate');
+
+            document.getElementById('searchWrapper').classList.toggle('has-value', searchInput.value !== '');
+            document.getElementById('startDateWrapper').classList.toggle('has-value', startDate.value !== '');
+            document.getElementById('endDateWrapper').classList.toggle('has-value', endDate.value !== '');
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            updateClearIcons();
+            renderEntries();
+        }
+
+        function clearStartDate() {
+            document.getElementById('filterStartDate').value = '';
+            updateClearIcons();
+            renderEntries();
+        }
+
+        function clearEndDate() {
+            document.getElementById('filterEndDate').value = '';
+            updateClearIcons();
+            renderEntries();
+        }
+
+        // Format Functions
+        function formatCurrency(amount) {
+            return '₹' + parseInt(amount).toLocaleString('en-IN');
+        }
+
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day} ${month} ${year}, ${hours}:${minutes}`;
+        }
+
+        // Convert status to CSS class name
+        function getStatusClass(status) {
+            return status.toLowerCase().replace(/\s+/g, '-');
+        }
+
+        // Bookmark Toggle
+        function toggleBookmark(id) {
+            const data = loadData();
+            const entry = data.find(e => e.id === id);
+            if (entry) {
+                entry.bookmarked = !entry.bookmarked;
+                saveData(data);
+                updateStats(); // Update counts immediately
+                renderEntries(); // Re-render to show changes
+                showSuccess(entry.bookmarked ? 'Entry bookmarked!' : 'Bookmark removed!');
+            }
+        }
+
+        // Quick Actions
+        function callCustomer(mobile) {
+            window.location.href = `tel:${mobile}`;
+        }
+
+        function whatsappCustomer(mobile) {
+            window.open(`https://wa.me/91${mobile.replace(/[^0-9]/g, '')}`, '_blank');
+        }
+
+        function emailCustomer() {
+            showSuccess('Email feature coming soon!');
+        }
+
+        // Bulk Selection
+        function toggleSelection(id) {
+            if (selectedEntries.has(id)) {
+                selectedEntries.delete(id);
+            } else {
+                selectedEntries.add(id);
+            }
+            updateBulkActions();
+        }
+
+        function selectAll() {
+            const data = loadData();
+            const filtered = getFilteredData(data);
+            filtered.forEach(entry => selectedEntries.add(entry.id));
+            updateBulkActions();
+            renderEntries();
+        }
+
+        function deselectAll() {
+            selectedEntries.clear();
+            updateBulkActions();
+            renderEntries();
+        }
+
+        function updateBulkActions() {
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (selectedEntries.size > 0) {
+                bulkActions.classList.add('active');
+                selectedCount.textContent = `${selectedEntries.size} selected`;
+            } else {
+                bulkActions.classList.remove('active');
+            }
+        }
+
+        // Bulk Delete
+        function bulkDelete() {
+            if (selectedEntries.size === 0) return;
+            document.getElementById('bulkDeleteText').textContent = 
+                `Are you sure you want to delete ${selectedEntries.size} selected entries? This action cannot be undone.`;
+            document.getElementById('bulkDeleteModal').classList.add('active');
+        }
+
+        function closeBulkDeleteModal() {
+            document.getElementById('bulkDeleteModal').classList.remove('active');
+        }
+
+        function confirmBulkDelete() {
+            const data = loadData();
+            const filteredData = data.filter(entry => !selectedEntries.has(entry.id));
+            saveData(filteredData);
+            selectedEntries.clear();
+            closeBulkDeleteModal();
+            updateBulkActions();
+            renderEntries();
+            renderCustomerSummary();
+            updateStats();
+            showSuccess('Selected entries deleted successfully!');
+        }
+
+        // Filter by Status
+        function filterByStatus(status) {
+            currentFilter = status;
+            showingAllEntries = false;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderEntries();
+        }
+
+        // Get Filtered Data
+        function getFilteredData(data) {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+
+            return data.filter(entry => {
+                const matchesSearch = !searchTerm || 
+                    entry.customerName.toLowerCase().includes(searchTerm) ||
+                    entry.mobile.includes(searchTerm) ||
+                    entry.product.toLowerCase().includes(searchTerm) ||
+                    (entry.address && entry.address.toLowerCase().includes(searchTerm)) ||
+                    (entry.reason && entry.reason.toLowerCase().includes(searchTerm)) ||
+                    (entry.notes && entry.notes.toLowerCase().includes(searchTerm));
+
+                const entryDate = new Date(entry.date).setHours(0, 0, 0, 0);
+                const matchesStartDate = !startDate || entryDate >= new Date(startDate).setHours(0, 0, 0, 0);
+                const matchesEndDate = !endDate || entryDate <= new Date(endDate).setHours(0, 0, 0, 0);
+
+                let matchesStatus = true;
+                if (currentFilter === 'Bookmarked') {
+                    matchesStatus = entry.bookmarked === true;
+                } else if (currentFilter !== 'All') {
+                    // Check if entry status contains the filter (for multi-status support)
+                    matchesStatus = entry.status.includes(currentFilter);
+                }
+
+                return matchesSearch && matchesStartDate && matchesEndDate && matchesStatus;
+            });
+        }
+
+        // Toggle Show More/Less
+        function toggleShowAllEntries() {
+            showingAllEntries = !showingAllEntries;
+            renderEntries();
+        }
+
+        // Render Entries with Show More/Less
+        function renderEntries() {
+            const data = loadData();
+            const container = document.getElementById('entriesContainer');
+            
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="no-entries">
+                        <div class="no-entries-icon">📋</div>
+                        <h3>No Entries Yet</h3>
+                        <p>Create your first entry to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const filtered = getFilteredData(data);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="no-entries">
+                        <div class="no-entries-icon">🔍</div>
+                        <h3>No Results Found</h3>
+                        <p>Try adjusting your filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const sortedFiltered = filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const displayEntries = showingAllEntries ? sortedFiltered : sortedFiltered.slice(0, INITIAL_ENTRY_LIMIT);
+
+            const entriesHTML = displayEntries.map(entry => {
+                const customerEntryCount = data.filter(e => 
+                    e.mobile === entry.mobile || 
+                    e.customerName.toLowerCase() === entry.customerName.toLowerCase()
+                ).length;
+                
+                return `
+                <div class="entry-card ${entry.bookmarked ? 'bookmarked' : ''}">
+                    <div class="entry-header">
+                        <div class="entry-main-info">
+                            <div class="entry-customer">
+                                <input type="checkbox" 
+                                    class="entry-checkbox" 
+                                    ${selectedEntries.has(entry.id) ? 'checked' : ''}
+                                    onchange="toggleSelection(${entry.id})">
+                                👤 ${entry.customerName}
+                                ${customerEntryCount > 1 ? `<span style="font-size: 0.7em; background: var(--info); color: white; padding: 2px 8px; border-radius: 12px; font-weight: 600;">${customerEntryCount} entries</span>` : ''}
+                            </div>
+                            <div class="entry-mobile">📱 ${entry.mobile}</div>
+                        </div>
+                        <div class="entry-actions">
+                            <button class="btn btn-icon ${entry.bookmarked ? 'btn-warning' : 'btn-outline'}" 
+                                onclick="toggleBookmark(${entry.id})" 
+                                title="${entry.bookmarked ? 'Remove Bookmark' : 'Add Bookmark'}">
+                                ${entry.bookmarked ? '⭐' : '☆'}
+                            </button>
+                            <button class="btn btn-icon btn-primary" onclick="editEntry(${entry.id})" title="Edit">✏️</button>
+                            <button class="btn btn-icon btn-danger" onclick="showDeleteModal(${entry.id})" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+
+                    <div class="entry-details">
+                        <div class="entry-detail-item">
+                            <div class="entry-detail-label">Product/Service</div>
+                            <div class="entry-detail-value">📦 ${entry.product}</div>
+                        </div>
+                        <div class="entry-detail-item">
+                            <div class="entry-detail-label">Status</div>
+                            <div class="entry-detail-value">
+                                <span class="status-badge ${getStatusClass(entry.status)}">${entry.status}</span>
+                            </div>
+                        </div>
+                        ${entry.amount ? `
+                        <div class="entry-detail-item">
+                            <div class="entry-detail-label">Amount</div>
+                            <div class="entry-detail-value">💰 ${formatCurrency(entry.amount)}</div>
+                        </div>
+                        ` : ''}
+                        <div class="entry-detail-item">
+                            <div class="entry-detail-label">Date & Time</div>
+                            <div class="entry-detail-value">🕐 ${formatDateTime(entry.date)}</div>
+                        </div>
+                        ${entry.address ? `
+                        <div class="entry-detail-item">
+                            <div class="entry-detail-label">Address</div>
+                            <div class="entry-detail-value">📍 ${entry.address}</div>
+                        </div>
+                        ` : ''}
+                        ${entry.reason ? `
+                        <div class="entry-detail-item">
+                            <div class="entry-detail-label">Reason/Outcome</div>
+                            <div class="entry-detail-value">${entry.reason}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    ${entry.notes ? `
+                    <div class="entry-notes">
+                        <div class="entry-notes-title">📝 Notes</div>
+                        <div class="entry-notes-content">${entry.notes}</div>
+                    </div>
+                    ` : ''}
+
+                    <div class="quick-actions">
+                        <button class="quick-action-btn" onclick="callCustomer('${entry.mobile}')">
+                            📞 Call
+                        </button>
+                        <button class="quick-action-btn" onclick="whatsappCustomer('${entry.mobile}')">
+                            💬 WhatsApp
+                        </button>
+                        <button class="quick-action-btn" onclick="emailCustomer()">
+                            ✉️ Email
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+
+            container.innerHTML = entriesHTML;
+
+            // Add show more/less button if needed
+            if (sortedFiltered.length > INITIAL_ENTRY_LIMIT) {
+                const showMoreBtn = document.createElement('button');
+                showMoreBtn.className = 'show-more-btn';
+                showMoreBtn.textContent = showingAllEntries 
+                    ? `▲ Show Less (${sortedFiltered.length - INITIAL_ENTRY_LIMIT} hidden)` 
+                    : `▼ Show More (${sortedFiltered.length - INITIAL_ENTRY_LIMIT} more entries)`;
+                showMoreBtn.onclick = toggleShowAllEntries;
+                container.appendChild(showMoreBtn);
+            }
+        }
+
+        // Customer Summary
+        function toggleShowAllCustomers() {
+            showingAllCustomers = !showingAllCustomers;
+            renderCustomerSummary();
+        }
+
+        function toggleCustomerEntries(mobile) {
+            const element = document.getElementById(`customer-entries-${mobile}`);
+            if (element) {
+                element.classList.toggle('expanded');
+            }
+        }
+
+        function renderCustomerSummary() {
+            const data = loadData();
+            const container = document.getElementById('customerSummaryContainer');
+            
+            if (data.length === 0) {
+                container.innerHTML = '<div class="no-entries"><p>No customers yet</p></div>';
+                return;
+            }
+
+            // Group entries by mobile number
+            const customerMap = new Map();
+            data.forEach(entry => {
+                if (!customerMap.has(entry.mobile)) {
+                    customerMap.set(entry.mobile, {
+                        name: entry.customerName,
+                        mobile: entry.mobile,
+                        entries: []
+                    });
+                }
+                customerMap.get(entry.mobile).entries.push(entry);
+            });
+
+            const customers = Array.from(customerMap.values())
+                .sort((a, b) => b.entries.length - a.entries.length);
+
+            const displayCustomers = showingAllCustomers ? customers : customers.slice(0, INITIAL_CUSTOMER_LIMIT);
+
+            const customersHTML = displayCustomers.map(customer => `
+                <div class="customer-card" onclick="toggleCustomerEntries('${customer.mobile}')">
+                    <div class="customer-card-header">
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="customer-name">👤 ${customer.name}</div>
+                            <div class="customer-mobile">📱 ${customer.mobile}</div>
+                        </div>
+                        <span class="entry-count-badge">${customer.entries.length} entries</span>
+                    </div>
+                    <div class="customer-entries" id="customer-entries-${customer.mobile}">
+                        ${customer.entries.sort((a, b) => new Date(b.date) - new Date(a.date)).map(entry => `
+                            <div style="padding: 8px; border-bottom: 1px solid var(--border); font-size: 0.85em;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <strong>${entry.product}</strong>
+                                    <span class="status-badge ${getStatusClass(entry.status)}">${entry.status}</span>
+                                </div>
+                                <div style="color: var(--text-secondary); font-size: 0.9em;">
+                                    ${formatDateTime(entry.date)}
+                                    ${entry.amount ? ` • ${formatCurrency(entry.amount)}` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = customersHTML;
+
+            // Add show more/less button if needed
+            if (customers.length > INITIAL_CUSTOMER_LIMIT) {
+                const showMoreBtn = document.createElement('button');
+                showMoreBtn.className = 'show-more-btn';
+                showMoreBtn.textContent = showingAllCustomers 
+                    ? `▲ Show Less (${customers.length - INITIAL_CUSTOMER_LIMIT} hidden)` 
+                    : `▼ Show More (${customers.length - INITIAL_CUSTOMER_LIMIT} more customers)`;
+                showMoreBtn.onclick = toggleShowAllCustomers;
+                container.appendChild(showMoreBtn);
+            }
+        }
+
+        // Update Stats
+        function updateStats() {
+            const data = loadData();
+            
+            const totalEntries = data.length;
+            // Count entries that include "Sold" in their status (supports multi-status)
+            const totalSales = data.filter(e => e.status.includes('Sold')).length;
+            const totalRevenue = data
+                .filter(e => e.status.includes('Sold') && e.amount)
+                .reduce((sum, e) => sum + parseInt(e.amount), 0);
+            
+            document.getElementById('totalEntries').textContent = totalEntries;
+            document.getElementById('totalSales').textContent = totalSales;
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            
+            // Update filter counts - count entries that include each status
+            document.getElementById('countAll').textContent = totalEntries;
+            document.getElementById('countInquiry').textContent = data.filter(e => e.status.includes('Inquiry')).length;
+            document.getElementById('countPending').textContent = data.filter(e => e.status.includes('Pending')).length;
+            document.getElementById('countSold').textContent = totalSales;
+            document.getElementById('countCancelled').textContent = data.filter(e => e.status.includes('Cancelled')).length;
+            document.getElementById('countFutureFollowUp').textContent = data.filter(e => e.status.includes('Future Follow-Up')).length;
+            document.getElementById('countBookmarked').textContent = data.filter(e => e.bookmarked === true).length;
+        }
+
+        // Edit Entry
+        function editEntry(id) {
+            const data = loadData();
+            const entry = data.find(e => e.id === id);
+            
+            if (!entry) return;
+            
+            document.getElementById('editEntryId').value = entry.id;
+            document.getElementById('mobile').value = entry.mobile;
+            document.getElementById('customerName').value = entry.customerName;
+            document.getElementById('product').value = entry.product;
+            document.getElementById('status').value = entry.status;
+            document.getElementById('amount').value = entry.amount || '';
+            document.getElementById('address').value = entry.address || '';
+            document.getElementById('reason').value = entry.reason || '';
+            document.getElementById('notes').value = entry.notes || '';
+            
+            // Handle multi-select status
+            const statuses = entry.status.split(', ');
+            document.querySelectorAll('.status-option input[type="checkbox"]').forEach(cb => {
+                cb.checked = statuses.includes(cb.value);
+                if (cb.checked) {
+                    cb.parentElement.style.background = 'rgba(52, 152, 219, 0.2)';
+                    cb.parentElement.style.borderLeft = '3px solid var(--accent)';
+                } else {
+                    cb.parentElement.style.background = 'var(--bg-card)';
+                    cb.parentElement.style.borderLeft = 'none';
+                }
+            });
+            
+            const date = new Date(entry.date);
+            date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+            document.getElementById('dateTime').value = date.toISOString().slice(0, 16);
+            
+            document.getElementById('formTitle').textContent = '✏️ Edit Entry';
+            document.getElementById('cancelEditBtn').style.display = 'block';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Cancel Edit
+        function cancelEdit() {
+            document.getElementById('entryForm').reset();
+            document.getElementById('editEntryId').value = '';
+            document.getElementById('formTitle').textContent = '➕ New Entry';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            document.getElementById('nameLabel').innerHTML = 'Customer Name';
+            
+            // Reset checkboxes
+            document.querySelectorAll('.status-option input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+                cb.parentElement.style.background = 'var(--bg-card)';
+                cb.parentElement.style.borderLeft = 'none';
+            });
+            
+            setDefaultDateTime();
+        }
+
+        // Delete Entry
+        function showDeleteModal(id) {
+            deleteEntryId = id;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            deleteEntryId = null;
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        function confirmDelete() {
+            if (deleteEntryId) {
+                const data = loadData();
+                const filteredData = data.filter(entry => entry.id !== deleteEntryId);
+                saveData(filteredData);
+                
+                closeDeleteModal();
+                renderEntries();
+                renderCustomerSummary();
+                updateStats();
+                showSuccess('Entry deleted successfully!');
+            }
+        }
+
+        // Success Message
+        function showSuccess(message) {
+            const successMsg = document.getElementById('successMessage');
+            const successText = document.getElementById('successText');
+            successText.textContent = message;
+            successMsg.classList.add('show');
+            setTimeout(() => {
+                successMsg.classList.remove('show');
+            }, 3000);
+        }
+
+        // Form Submit
+        document.getElementById('entryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const editId = document.getElementById('editEntryId').value;
+            const data = loadData();
+            const mobile = document.getElementById('mobile').value;
+            
+            // Check for duplicate mobile with different name (only for new entries)
+            if (!editId) {
+                const existingWithMobile = data.find(e => e.mobile === mobile);
+                if (existingWithMobile) {
+                    const enteredName = document.getElementById('customerName').value.toLowerCase();
+                    const existingName = existingWithMobile.customerName.toLowerCase();
+                    if (enteredName !== existingName) {
+                        if (!confirm(`This mobile number is already registered with name "${existingWithMobile.customerName}". Do you want to continue with the new name "${document.getElementById('customerName').value}"?`)) {
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            const entryData = {
+                date: new Date(document.getElementById('dateTime').value).toISOString(),
+                mobile: mobile,
+                customerName: document.getElementById('customerName').value,
+                product: document.getElementById('product').value,
+                status: document.getElementById('status').value,
+                amount: document.getElementById('amount').value,
+                address: document.getElementById('address').value,
+                reason: document.getElementById('reason').value,
+                notes: document.getElementById('notes').value
+            };
+            
+            if (editId) {
+                const index = data.findIndex(e => e.id === parseInt(editId));
+                if (index !== -1) {
+                    data[index] = { ...data[index], ...entryData };
+                }
+                showSuccess('Entry updated successfully!');
+            } else {
+                const newEntry = {
+                    id: Date.now(),
+                    bookmarked: false,
+                    ...entryData
+                };
+                data.push(newEntry);
+                showSuccess('Entry saved successfully!');
+            }
+            
+            saveData(data);
+            cancelEdit();
+            renderEntries();
+            renderCustomerSummary();
+            updateStats();
+        });
+
+        // Download Excel Template
+        function downloadTemplate() {
+            // Template data
+            const templateData = [
+                {
+                    'Mobile': '9876543210',
+                    'Customer Name': 'John Doe',
+                    'Product': 'Product/Service Name',
+                    'Status': 'Inquiry',
+                    'Amount': '5000',
+                    'Date & Time': '2024-01-15 10:30',
+                    'Address': 'Customer Address (Optional)',
+                    'Reason': 'Reason/Outcome (Optional)',
+                    'Notes': 'Additional Notes (Optional)'
+                },
+                {
+                    'Mobile': '9988776655',
+                    'Customer Name': 'Jane Smith',
+                    'Product': 'Another Product',
+                    'Status': 'Sold',
+                    'Amount': '15000',
+                    'Date & Time': '2024-01-16 14:20',
+                    'Address': '',
+                    'Reason': '',
+                    'Notes': 'Example of completed sale'
+                }
+            ];
+
+            // Status options reference
+            const statusOptions = [
+                { 'Status Options': 'Inquiry' },
+                { 'Status Options': 'Pending' },
+                { 'Status Options': 'Sold' },
+                { 'Status Options': 'Cancelled' },
+                { 'Status Options': 'Future Follow-Up' }
+            ];
+
+            // Instructions
+            const instructions = [
+                { 'IMPORTANT INSTRUCTIONS': 'Please read carefully before filling the template' },
+                { 'IMPORTANT INSTRUCTIONS': '' },
+                { 'IMPORTANT INSTRUCTIONS': '1. Mobile: Enter 10-digit mobile number (required)' },
+                { 'IMPORTANT INSTRUCTIONS': '2. Customer Name: Full name of customer (required)' },
+                { 'IMPORTANT INSTRUCTIONS': '3. Product: Product or service name (required)' },
+                { 'IMPORTANT INSTRUCTIONS': '4. Status: Use EXACT spelling from Status Options sheet' },
+                { 'IMPORTANT INSTRUCTIONS': '   Valid options: Inquiry, Pending, Sold, Cancelled, Future Follow-Up' },
+                { 'IMPORTANT INSTRUCTIONS': '   You can also combine multiple: "Inquiry, Pending" or "Sold, Future Follow-Up"' },
+                { 'IMPORTANT INSTRUCTIONS': '5. Amount: Numbers only, no currency symbols (optional)' },
+                { 'IMPORTANT INSTRUCTIONS': '6. Date & Time: Format YYYY-MM-DD HH:MM (e.g., 2024-01-15 10:30)' },
+                { 'IMPORTANT INSTRUCTIONS': '7. Delete these example rows before importing your data' },
+                { 'IMPORTANT INSTRUCTIONS': '' },
+                { 'IMPORTANT INSTRUCTIONS': '⚠️ SPELLING MATTERS: Status must match exactly or import will fail' }
+            ];
+
+            const wb = XLSX.utils.book_new();
+            
+            // Add template sheet
+            const ws1 = XLSX.utils.json_to_sheet(templateData);
+            ws1['!cols'] = [
+                { wch: 15 },
+                { wch: 20 },
+                { wch: 25 },
+                { wch: 20 },
+                { wch: 12 },
+                { wch: 18 },
+                { wch: 30 },
+                { wch: 30 },
+                { wch: 30 }
+            ];
+            XLSX.utils.book_append_sheet(wb, ws1, 'Template');
+            
+            // Add status options sheet
+            const ws2 = XLSX.utils.json_to_sheet(statusOptions);
+            ws2['!cols'] = [{ wch: 25 }];
+            XLSX.utils.book_append_sheet(wb, ws2, 'Status Options');
+            
+            // Add instructions sheet
+            const ws3 = XLSX.utils.json_to_sheet(instructions);
+            ws3['!cols'] = [{ wch: 80 }];
+            XLSX.utils.book_append_sheet(wb, ws3, 'Instructions');
+            
+            XLSX.writeFile(wb, 'TheAnalyst_Import_Template.xlsx');
+            showSuccess('Template downloaded with Status Options and Instructions!');
+        }
+
+        // Export Customer Summary to Excel
+        function exportCustomerSummary() {
+            const data = loadData();
+            
+            if (data.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            // Group by mobile number
+            const customerMap = new Map();
+            data.forEach(entry => {
+                if (!customerMap.has(entry.mobile)) {
+                    customerMap.set(entry.mobile, {
+                        name: entry.customerName,
+                        mobile: entry.mobile,
+                        entryCount: 0
+                    });
+                }
+                customerMap.get(entry.mobile).entryCount++;
+            });
+            
+            // Convert to array and sort by entry count
+            const customers = Array.from(customerMap.values())
+                .sort((a, b) => b.entryCount - a.entryCount);
+            
+            const excelData = customers.map(customer => ({
+                'Customer Name': customer.name,
+                'Mobile': customer.mobile,
+                'Number of Entries': customer.entryCount
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            
+            ws['!cols'] = [
+                { wch: 25 },
+                { wch: 15 },
+                { wch: 18 }
+            ];
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Customer Summary');
+            
+            const filename = `TheAnalyst_Customer_Summary_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            showSuccess('Customer summary exported successfully!');
+        }
+
+        // Export to Excel
+        function exportToExcel() {
+            const data = loadData();
+            
+            if (data.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            const excelData = data
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map(entry => ({
+                    'Mobile': entry.mobile,
+                    'Customer Name': entry.customerName,
+                    'Product': entry.product,
+                    'Status': entry.status,
+                    'Amount': entry.amount ? formatCurrency(entry.amount) : '',
+                    'Date & Time': formatDateTime(entry.date),
+                    'Address': entry.address || '',
+                    'Reason/Outcome': entry.reason || '',
+                    'Notes': entry.notes || '',
+                    'Bookmarked': entry.bookmarked ? 'Yes' : 'No'
+                }));
+            
+            const ws = XLSX.utils.json_to_sheet(excelData);
+            
+            ws['!cols'] = [
+                { wch: 15 },
+                { wch: 20 },
+                { wch: 25 },
+                { wch: 12 },
+                { wch: 12 },
+                { wch: 18 },
+                { wch: 30 },
+                { wch: 30 },
+                { wch: 30 },
+                { wch: 10 }
+            ];
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Customer Data');
+            
+            const filename = `TheAnalyst_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            showSuccess('Data exported successfully!');
+        }
+
+        // Import from Excel
+        function showImportModal() {
+            document.getElementById('importModal').classList.add('active');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+            document.getElementById('fileInput').value = '';
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                    if (jsonData.length === 0) {
+                        alert('No data found in the Excel file!');
+                        return;
+                    }
+
+                    const existingData = loadData();
+                    let importedCount = 0;
+                    let skippedCount = 0;
+
+                    jsonData.forEach(row => {
+                        // Check required fields - Mobile first, then Customer Name
+                        if (!row['Mobile'] || !row['Customer Name'] || !row['Product'] || !row['Status']) {
+                            skippedCount++;
+                            return;
+                        }
+
+                        const newEntry = {
+                            id: Date.now() + Math.random(),
+                            date: row['Date & Time'] ? new Date(row['Date & Time']).toISOString() : new Date().toISOString(),
+                            mobile: String(row['Mobile']),
+                            customerName: String(row['Customer Name']),
+                            product: String(row['Product']),
+                            status: String(row['Status']),
+                            amount: row['Amount'] ? String(row['Amount']).replace(/[^0-9]/g, '') : '',
+                            address: row['Address'] ? String(row['Address']) : '',
+                            reason: row['Reason/Outcome'] ? String(row['Reason/Outcome']) : '',
+                            notes: row['Notes'] ? String(row['Notes']) : '',
+                            bookmarked: false
+                        };
+
+                        existingData.push(newEntry);
+                        importedCount++;
+                    });
+
+                    saveData(existingData);
+                    renderEntries();
+                    renderCustomerSummary();
+                    updateStats();
+                    closeImportModal();
+                    
+                    let message = `Successfully imported ${importedCount} entries!`;
+                    if (skippedCount > 0) {
+                        message += ` (${skippedCount} rows skipped - missing required fields)`;
+                    }
+                    showSuccess(message);
+
+                } catch (error) {
+                    alert('Error reading Excel file. Please use the provided template.');
+                    console.error(error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Drag & Drop for Import
+        const importArea = document.getElementById('importArea');
+        
+        importArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            importArea.classList.add('dragover');
+        });
+
+        importArea.addEventListener('dragleave', () => {
+            importArea.classList.remove('dragover');
+        });
+
+        importArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            importArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFileSelect({ target: { files: files } });
+            }
+        });
+
+        // Event Listeners
+        document.getElementById('searchInput').addEventListener('input', () => {
+            updateClearIcons();
+            renderEntries();
+        });
+        document.getElementById('filterStartDate').addEventListener('change', () => {
+            updateClearIcons();
+            renderEntries();
+        });
+        document.getElementById('filterEndDate').addEventListener('change', () => {
+            updateClearIcons();
+            renderEntries();
+        });
+
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+
+        document.getElementById('bulkDeleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeBulkDeleteModal();
+        });
+
+        document.getElementById('importModal').addEventListener('click', function(e) {
+            if (e.target === this) closeImportModal();
+        });
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', function() {
+            updateCurrentDate();
+            setInterval(updateCurrentDate, 60000);
+            setupThemeToggle();
+            setDefaultDateTime();
+            renderEntries();
+            renderCustomerSummary();
+            updateStats();
+            updateClearIcons();
+        });
+    </script>
+</body>
+</html>
